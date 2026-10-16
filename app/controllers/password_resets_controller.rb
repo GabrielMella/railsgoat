@@ -3,7 +3,10 @@ class PasswordResetsController < ApplicationController
   skip_before_action :authenticated
 
   def reset_password
-    user = Marshal.load(Base64.decode64(params[:user])) unless params[:user].nil?
+    user = nil
+    if !params[:token].nil? && is_valid?(params[:token])
+      user = @user
+    end
 
     if user && params[:password] && params[:confirm_password] && params[:password] == params[:confirm_password]
       user.password = params[:password]
@@ -45,19 +48,19 @@ class PasswordResetsController < ApplicationController
   end
 
   def generate_token(id, email)
-    hash = Digest::MD5.hexdigest(email)
-    "#{id}-#{hash}"
+    hmac = OpenSSL::HMAC.hexdigest('SHA256', Rails.application.secret_key_base, "#{id}:#{email}")
+    "#{id}-#{hmac}"
   end
 
   def is_valid?(token)
-    if token =~ /(?<user>\d+)-(?<email_hash>[A-Z0-9]{32})/i
+    if token =~ /\A(?<user_id>\d+)-(?<token_hmac>[0-9a-f]{64})\z/i
+      # Fetch the user by their id
+      @user = User.find_by(id: $~[:user_id])
+      return false unless @user
 
-      # Fetch the user by their id, and hash their email address
-      @user = User.find_by(id: $~[:user])
-      email = Digest::MD5.hexdigest(@user.email)
-
-      # Compare and validate our hashes
-      return true if email == $~[:email_hash]
+      # Recompute the HMAC and compare in constant time
+      expected = OpenSSL::HMAC.hexdigest('SHA256', Rails.application.secret_key_base, "#{@user.id}:#{@user.email}")
+      ActiveSupport::SecurityUtils.secure_compare(expected, $~[:token_hmac])
     end
   end
 end
