@@ -19,7 +19,7 @@
           </div>
           <h4 class="card-title mb-3">Health Insurance</h4>
           <p class="text-muted mb-4">Download your health insurance benefit forms and information</p>
-          <%= link_to download_path(type: "File", name: "public/docs/Health_n_Stuff.pdf"), class: "btn btn-primary btn-lg" do %>
+          <%= link_to "/docs/Health_n_Stuff.pdf", class: "btn btn-primary btn-lg" do %>
             <i class="bi bi-file-earmark-pdf"></i> Download PDF
           <% end %>
         </div>
@@ -35,7 +35,7 @@
           </div>
           <h4 class="card-title mb-3">Dental Insurance</h4>
           <p class="text-muted mb-4">Download your dental insurance benefit forms and information</p>
-          <%= link_to download_path(type: "File", name: "public/docs/Dental_n_Stuff.pdf"), class: "btn btn-success btn-lg" do %>
+          <%= link_to "/docs/Dental_n_Stuff.pdf", class: "btn btn-success btn-lg" do %>
             <i class="bi bi-file-earmark-pdf"></i> Download PDF
           <% end %>
         </div>

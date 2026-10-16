@@ -8,9 +8,17 @@ class BenefitFormsController < ApplicationController
 
   def download
    begin
-     path = params[:name]
-     file = params[:type].constantize.new(path)
-     send_file file, disposition: "attachment"
+     upload_dir = Rails.root.join("public", "data")
+     filename = File.basename(params[:name].to_s)
+     file_path = Pathname.new(upload_dir.join(filename)).expand_path
+
+     unless file_path.to_s.start_with?(upload_dir.expand_path.to_s + File::SEPARATOR) &&
+            File.exist?(file_path)
+       redirect_to user_benefit_forms_path(user_id: current_user.id)
+       return
+     end
+
+     send_file file_path, disposition: "attachment"
    rescue
      redirect_to user_benefit_forms_path(user_id: current_user.id)
    end
