@@ -8,11 +8,11 @@ class MessagesController < ApplicationController
   end
 
   def show
-    @message = Message.where(id: params[:id]).first
+    @message = current_user.messages.where(id: params[:id]).first
   end
 
   def destroy
-    message = Message.where(id: params[:id]).first
+    message = current_user.messages.where(id: params[:id]).first
 
     if message.destroy
       flash[:success] = "Your message has been deleted."
