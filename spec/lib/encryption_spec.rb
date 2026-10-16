@@ -5,7 +5,6 @@ require_relative "../../lib/encryption"
 describe Encryption do
   let(:value) {
     allow(Encryption).to receive(:key).and_return(SecureRandom.bytes(32))
-    allow(Encryption).to receive(:iv).and_return(SecureRandom.bytes(16))
 
     "OMG PII"
   }
