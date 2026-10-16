@@ -3,13 +3,16 @@ class PasswordResetsController < ApplicationController
   skip_before_action :authenticated
 
   def reset_password
-    user = Marshal.load(Base64.decode64(params[:user])) unless params[:user].nil?
-
-    if user && params[:password] && params[:confirm_password] && params[:password] == params[:confirm_password]
-      user.password = params[:password]
-      user.save!
-      flash[:success] = "Your password has been reset please login"
-      redirect_to :login
+    if params[:token] && is_valid?(params[:token])
+      if params[:password] && params[:confirm_password] && params[:password] == params[:confirm_password]
+        @user.password = params[:password]
+        @user.save!
+        flash[:success] = "Your password has been reset please login"
+        redirect_to :login
+      else
+        flash[:error] = "Error resetting your password. Please try again."
+        redirect_to :login
+      end
     else
       flash[:error] = "Error resetting your password. Please try again."
       redirect_to :login
@@ -45,19 +48,19 @@ class PasswordResetsController < ApplicationController
   end
 
   def generate_token(id, email)
-    hash = Digest::MD5.hexdigest(email)
-    "#{id}-#{hash}"
+    hmac = OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, email)
+    "#{id}-#{hmac}"
   end
 
   def is_valid?(token)
-    if token =~ /(?<user>\d+)-(?<email_hash>[A-Z0-9]{32})/i
-
-      # Fetch the user by their id, and hash their email address
+    if token =~ /\A(?<user>\d+)-(?<email_hash>[0-9a-f]{64})\z/i
+      # Fetch the user by their id, and compute HMAC of their email address
       @user = User.find_by(id: $~[:user])
-      email = Digest::MD5.hexdigest(@user.email)
+      return false unless @user
+      expected = OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, @user.email)
 
-      # Compare and validate our hashes
-      return true if email == $~[:email_hash]
+      # Compare and validate our tokens using a constant-time comparison
+      ActiveSupport::SecurityUtils.secure_compare(expected, $~[:email_hash])
     end
   end
 end
