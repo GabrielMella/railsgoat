@@ -13,7 +13,7 @@ class SessionsController < ApplicationController
     begin
       # Normalize the email address, why not
       user = User.authenticate(params[:email].to_s.strip.downcase, params[:password])
-    rescue RuntimeError => e
+    rescue RuntimeError
       # don't do ANYTHING
     end
 
@@ -25,7 +25,7 @@ class SessionsController < ApplicationController
       end
       redirect_to path
     else
-      flash[:error] = e.message
+      flash[:error] = "Invalid email or password."
       render "sessions/new"
     end
   end
