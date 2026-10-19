@@ -5,6 +5,9 @@ class WorkInfoController < ApplicationController
     if !(@user) || @user.admin
       flash[:error] = "Sorry, no user with that user id exists"
       redirect_to home_dashboard_index_path
+    elsif current_user.id != @user.id && !current_user.admin
+      flash[:error] = "Sorry, you are not authorized to view that page"
+      redirect_to home_dashboard_index_path
     end
   end
 
