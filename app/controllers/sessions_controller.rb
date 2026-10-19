@@ -9,7 +9,7 @@ class SessionsController < ApplicationController
   end
 
   def create
-    path = params[:url].present? ? params[:url] : home_dashboard_index_path
+    path = safe_redirect_url
     begin
       # Normalize the email address, why not
       user = User.authenticate(params[:email].to_s.strip.downcase, params[:password])
@@ -34,5 +34,17 @@ class SessionsController < ApplicationController
     cookies.delete(:auth_token)
     reset_session
     redirect_to root_path
+  end
+
+  private
+
+  def safe_redirect_url
+    url = params[:url].to_s
+    # Reject blank, protocol-relative (//host), and any value not starting with '/'
+    return home_dashboard_index_path unless url.start_with?('/') && !url.start_with?('//')
+    uri = URI.parse(url)
+    (uri.relative? && uri.host.nil?) ? url : home_dashboard_index_path
+  rescue URI::InvalidURIError
+    home_dashboard_index_path
   end
 end
