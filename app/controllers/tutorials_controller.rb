@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class TutorialsController < ApplicationController
   skip_before_action :has_info
-  skip_before_action :authenticated
+  skip_before_action :authenticated, only: [:redos_email, :redos_username, :redos_email_safe, :supply_chain, :check_dependencies]
 
   def credentials
     # Render credentials page with layout
