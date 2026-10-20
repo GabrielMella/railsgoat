@@ -7,20 +7,12 @@ class TutorialsController < ApplicationController
     # Render credentials page with layout
   end
 
-  # VULNERABILITY: Regular Expression Denial of Service (ReDoS)
-  # This endpoint demonstrates how malicious input can cause catastrophic backtracking
-  # in regular expressions, potentially hanging the application.
-  #
-  # In Rails 8, Regexp.timeout is set to 1 second by default, which prevents
-  # infinite hangs but still allows attackers to consume server resources.
-  #
   # Tutorial: See wiki R8-A1-ReDoS for exploitation details
   def redos_email
     email = params[:email]
 
-    # VULNERABLE: Complex email regex with nested quantifiers
-    # This pattern is susceptible to catastrophic backtracking
-    email_pattern = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+    # SAFE: Use Ruby's built-in URI email regex which does not have catastrophic backtracking
+    email_pattern = URI::MailTo::EMAIL_REGEXP
 
     begin
       start_time = Time.now
@@ -34,27 +26,22 @@ class TutorialsController < ApplicationController
       }
     rescue Regexp::TimeoutError => e
       elapsed_time = Time.now - start_time
-      Rails.logger.warn "[SECURITY] ReDoS attempt detected - pattern: email validation, elapsed: #{elapsed_time}s"
+      Rails.logger.warn "[SECURITY] Regexp timeout during email validation, elapsed: #{elapsed_time}s"
 
       render json: {
         error: "Timeout",
-        message: "Email validation timed out - possible ReDoS attack",
+        message: "Email validation timed out",
         time_elapsed: elapsed_time
       }, status: :bad_request
     end
   end
 
-  # VULNERABILITY: ReDoS with nested quantifiers
-  # Even worse than the email example - this demonstrates pure nested quantifiers
-  # which cause exponential backtracking.
-  #
   # Tutorial: See wiki R8-A1-ReDoS for exploitation details
   def redos_username
     username = params[:username]
 
-    # EXTREMELY VULNERABLE: Nested quantifiers (a+)+
-    # This is the canonical ReDoS example
-    username_pattern = /^(a+)+$/
+    # SAFE: Simple character class pattern without nested quantifiers
+    username_pattern = /\A\w+\z/
 
     begin
       start_time = Time.now
@@ -68,11 +55,11 @@ class TutorialsController < ApplicationController
       }
     rescue Regexp::TimeoutError => e
       elapsed_time = Time.now - start_time
-      Rails.logger.warn "[SECURITY] ReDoS attempt detected - pattern: username validation, elapsed: #{elapsed_time}s"
+      Rails.logger.warn "[SECURITY] Regexp timeout during username validation, elapsed: #{elapsed_time}s"
 
       render json: {
         error: "Timeout",
-        message: "Username validation timed out - possible ReDoS attack",
+        message: "Username validation timed out",
         time_elapsed: elapsed_time
       }, status: :bad_request
     end
