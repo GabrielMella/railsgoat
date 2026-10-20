@@ -21,7 +21,14 @@ class PayController < ApplicationController
 
   def show
    respond_to do |format|
-     format.json { render json: {user: current_user.pay.as_json} }
+     format.json do
+       pay_data = current_user.pay.map do |record|
+         record.as_json.merge(
+           'bank_account_num' => Encryption.decrypt_sensitive_value(record.bank_account_num) || 'No Data'
+         )
+       end
+       render json: {user: pay_data}
+     end
    end
   end
 
@@ -33,12 +40,5 @@ class PayController < ApplicationController
       flash[:error] = "Unable to process that request at this time"
     end
     redirect_to user_pay_index_path
-  end
-
-  def decrypted_bank_acct_num
-    decrypted = Encryption.decrypt_sensitive_value(params[:value_to_decrypt])
-    respond_to do |format|
-      format.json { render json: {account_num: decrypted || "No Data" } }
-    end
   end
 end

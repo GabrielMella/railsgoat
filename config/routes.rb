@@ -27,7 +27,6 @@ Railsgoat::Application.routes.draw do
     resources :pay do
       collection do
         post "update_dd_info"
-        post "decrypted_bank_acct_num"
       end
     end
 
