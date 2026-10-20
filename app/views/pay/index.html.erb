@@ -91,35 +91,6 @@
         </div>
       </div>
 
-      <!-- Decrypt Form -->
-      <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-unlock text-warning me-2"></i>Decrypt Account
-          </h5>
-        </div>
-        <div class="card-body p-4">
-          <%= form_tag "#", { class: "needs-validation", id: "decrypt_form" } do %>
-            <div class="mb-4">
-              <label class="form-label fw-semibold">
-                <i class="bi bi-key-fill text-warning me-2"></i>Encrypted Account Number
-              </label>
-              <%= text_field_tag :value_to_decrypt, params[:value_to_decrypt], {
-                placeholder: "Paste encrypted value",
-                class: "form-control form-control-lg"
-              } %>
-              <small class="text-muted">Copy from the table to the right</small>
-            </div>
-
-            <div class="d-grid">
-              <%= submit_tag "Decrypt", {
-                id: "decrypt_btn",
-                class: "btn btn-warning btn-lg"
-              } %>
-            </div>
-          <% end %>
-        </div>
-      </div>
     </div>
 
     <!-- Right Column - Accounts Table -->
@@ -248,59 +219,6 @@ $(document).on('click', '.delete-row', function (e) {
     e.preventDefault();
     return false;
   }
-});
-
-/*
-  decryptShow parses the json response from the application and then renders
-  a decrypted version of the user's account number
-*/
-function decryptShow(response){
-  var msg = jQuery.parseJSON(JSON.stringify(response));
-
-  // Modern alert using Bootstrap modal-like appearance
-  var alertHtml = '<div class="alert alert-info alert-dismissible fade show" role="alert" style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">' +
-    '<div class="d-flex align-items-center">' +
-    '<i class="bi bi-unlock-fill me-3" style="font-size: 2rem;"></i>' +
-    '<div>' +
-    '<h5 class="alert-heading mb-1">Decrypted Account Number</h5>' +
-    '<p class="mb-0"><strong style="font-size: 1.2rem; font-family: monospace;">' + msg.account_num + '</strong></p>' +
-    '</div>' +
-    '</div>' +
-    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-    '</div>';
-
-  $('body').append(alertHtml);
-
-  // Auto-remove after 5 seconds
-  setTimeout(function() {
-    $('.alert').fadeOut(function() {
-      $(this).remove();
-    });
-  }, 5000);
-};
-
-/*
-  This function overrides the decrypt buttons (submit button's) native behavior,
-  allowing an ajax call to be made with the decrypt_form's inputs which is decrypted
-  server side with a JSON response containing the decrypted value. The decrypted value is
-  then passed to decryptShow();
-*/
-$("#decrypt_btn").click(function(event){
-  var valuesToSubmit = $("#decrypt_form").serialize();
-  event.preventDefault();
-  $.ajax({
-      url: <%= sanitize(decrypted_bank_acct_num_user_pay_index_path(:format => "json", user_id: current_user.id).inspect) %>,
-    data: valuesToSubmit,
-    type: "POST",
-    success: function(response) {
-    $('#success').show(500).delay(1500).fadeOut();
-    decryptShow(response);
-    $('#decrypt_form')[0].reset();
-    },
-    error: function(event) {
-    $('#failure').show(500).delay(1500).fadeOut();
-    }
-  });
 });
 
 /*
