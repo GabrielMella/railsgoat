@@ -10,7 +10,7 @@ class AdminController < ApplicationController
     if params[:field].nil?
       fields = "*"
     else
-      fields = custom_fields.join(",")
+      fields = params.require(:field).keys.map { |f| Analytics.parse_field(f) }.join(",")
     end
 
     if params[:ip]
